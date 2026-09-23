@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация студента</title>
+    <link rel="stylesheet" href="C:\Users\Student\Desktop\Bek-course-2\lab4bek\style.css">
+</head>
+<body>
+    <div class="form-container">
+        <h2>Регистрация студента</h2>
+        <form id="studentForm">
+            <div class="form-group">
+                <label for="fullName">ФИО:</label>
+                <input type="text" id="fullName" placeholder="Иванов Иван Иванович">
+            </div>
+            <div class="form-group">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" placeholder="example@mail.com">
+            </div>
+            <div class="form-group">
+                <label for="course">Курс:</label>
+                <select id="course">
+                    <option value="">Выберите курс</option>
+                    <option value="1">1 курс</option>
+                    <option value="2">2 курс</option>
+                    <option value="3">3 курс</option>
+                    <option value="4">4 курс</option>
+                </select>
+            </div>
+            <div class="form-group checkbox-group">
+                <label>
+                    <input type="checkbox" id="agree"> Согласен с правилами
+                </label>
+            </div>
+            <button type="submit">Зарегистрироваться</button>
+            <p id="message" class="message"></p>
+        </form>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

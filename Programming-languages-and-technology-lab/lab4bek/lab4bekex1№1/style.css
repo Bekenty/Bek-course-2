@@ -1,0 +1,42 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+.form-container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 350px;
+}
+h2 { text-align: center; color: #333; }
+.form-group { margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; color: #666; font-size: 14px; }
+input[type="text"], input[type="email"], select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.checkbox-group { display: flex; align-items: center; }
+.checkbox-group label { display: inline; margin-bottom: 0; cursor: pointer; }
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007BFF;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+button:hover { background-color: #0056b3; }
+.message { margin-top: 15px; text-align: center; font-weight: bold; font-size: 14px; }
+.error { color: #d9534f; }
+.success { color: #5cb85c; }

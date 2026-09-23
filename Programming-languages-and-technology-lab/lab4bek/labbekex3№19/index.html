@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Заявка на стажировку</title>
+    <link rel="stylesheet" href="C:\Users\Student\Desktop\Bek-course-2\lab4bek\labbekex3/style.css">
+</head>
+<body>
+    <div class="form-container wide">
+        <h2>Заявка на стажировку</h2>
+        <form id="internshipForm">
+            <div class="form-group">
+                <label for="fullName">ФИО:</label>
+                <input type="text" id="fullName" placeholder="Иванов Иван Иванович">
+            </div>
+            <div class="form-group">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" placeholder="mail@example.com">
+            </div>
+            <div class="form-group">
+                <label for="course">Курс:</label>
+                <select id="course">
+                    <option value="">Выберите курс</option>
+                    <option value="3">3 курс</option>
+                    <option value="4">4 курс</option>
+                    <option value="Magistracy">Магистратура</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Навыки (выберите минимум 2):</label>
+                <div class="checkbox-group-vertical">
+                    <label><input type="checkbox" name="skills" value="HTML/CSS"> HTML/CSS</label>
+                    <label><input type="checkbox" name="skills" value="JavaScript"> JavaScript</label>
+                    <label><input type="checkbox" name="skills" value="Git"> Git / GitHub</label>
+                    <label><input type="checkbox" name="skills" value="Python"> Python</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="motivation">Мотивационное письмо (мин. 30 символов):</label>
+                <textarea id="motivation" rows="4" placeholder="Расскажите, почему вы хотите попасть на стажировку..."></textarea>
+            </div>
+            <button type="submit">Отправить заявку</button>
+            <p id="message" class="message"></p>
+        </form>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
