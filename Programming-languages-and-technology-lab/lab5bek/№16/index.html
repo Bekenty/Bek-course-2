@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Список задач</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        input {
+            padding: 10px;
+            width: 60%;
+        }
+
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        li {
+            margin: 10px 0;
+            padding: 10px;
+
+            border: 1px solid #ccc;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .task-text {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .delete-btn {
+            margin-left: 10px;
+        }
+
+        #statistics {
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Список задач</h1>
+
+    <input
+        type="text"
+        id="taskInput"
+        placeholder="Введите новую задачу"
+    >
+
+    <button id="addBtn">Добавить</button>
+
+    <div id="statistics">
+        Всего: 0 |
+        Выполнено: 0 |
+        Осталось: 0
+    </div>
+
+    <ul id="taskList"></ul>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
