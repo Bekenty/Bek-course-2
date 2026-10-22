@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мини-проект СРО №19 - Управление тренировками | Жарас Бек (ИС 25-22)</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --primary-color: #007bff;
+            --danger-color: #dc3545;
+            --border-color: #cccccc;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 550px;
+            max-width: 100%;
+        }
+
+        h1 {
+            font-size: 1.4em;
+            margin-bottom: 5px;
+        }
+
+        .author {
+            font-size: 0.9em;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: #ffffff;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .workouts-list {
+            margin-top: 20px;
+            max-height: 250px;
+            overflow-y: auto;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        .workout-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .workout-item button {
+            width: auto;
+            padding: 4px 8px;
+            background-color: var(--danger-color);
+            font-size: 0.8em;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🏋️ Управление спортивными тренировками</h1>
+        <p class="author">Выполнил: Жарас Бек (Группа: ИС 25-22)</p>
+
+        <!-- Форма добавления упражнения -->
+        <div class="form-group">
+            <label for="nameInput">Название упражнения:</label>
+            <input type="text" id="nameInput" placeholder="Например: Жим лежа">
+        </div>
+
+        <div class="form-group">
+            <label for="muscleSelect">Целевая группа мышц:</label>
+            <select id="muscleSelect">
+                <option value="Грудь">Грудь</option>
+                <option value="Спина">Спина</option>
+                <option value="Ноги">Ноги</option>
+                <option value="Плечи">Плечи</option>
+                <option value="Руки">Руки</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <label for="setsInput">Подходы:</label>
+                <input type="number" id="setsInput" placeholder="4" min="1">
+            </div>
+            <div style="flex: 1;">
+                <label for="repsInput">Повторения:</label>
+                <input type="number" id="repsInput" placeholder="10" min="1">
+            </div>
+            <div style="flex: 1;">
+                <label for="weightInput">Вес (кг):</label>
+                <input type="number" id="weightInput" placeholder="80" min="0">
+            </div>
+        </div>
+
+        <button id="addBtn">Добавить упражнение в план</button>
+
+        <!-- Список упражнений -->
+        <div class="workouts-list" id="workoutsList"></div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = "sro_workouts_jasar_is2522";
+
+        const nameInput = document.querySelector("#nameInput");
+        const muscleSelect = document.querySelector("#muscleSelect");
+        const setsInput = document.querySelector("#setsInput");
+        const repsInput = document.querySelector("#repsInput");
+        const weightInput = document.querySelector("#weightInput");
+        const addBtn = document.querySelector("#addBtn");
+        const workoutsListContainer = document.querySelector("#workoutsList");
+
+        let workouts = [];
+
+        // Безопасная загрузка из localStorage через try...catch и JSON.parse()
+        function loadWorkouts() {
+            try {
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                if (!savedData) return [];
+                const parsed = JSON.parse(savedData);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.error("Ошибка чтения JSON из localStorage:", error);
+                return [];
+            }
+        }
+
+        // Сохранение в localStorage через JSON.stringify()
+        function saveWorkouts() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(workouts));
+            } catch (error) {
+                console.error("Ошибка записи в localStorage:", error);
+            }
+        }
+
+        // Рендеринг интерфейса
+        function render() {
+            workoutsListContainer.innerHTML = "";
+
+            if (workouts.length === 0) {
+                workoutsListContainer.innerHTML = '<p style="text-align: center; color: #888; font-size: 0.9em;">План тренировок пуст</p>';
+                return;
+            }
+
+            workouts.forEach((item, index) => {
+                const itemDiv = document.createElement("div");
+                itemDiv.className = "workout-item";
+                itemDiv.innerHTML = `
+                    <div>
+                        <strong>${item.name}</strong> (${item.muscle})<br>
+                        <small style="color: #666;">Подходы: ${item.sets} | Повторения: ${item.reps} | Вес: ${item.weight} кг</small>
+                    </div>
+                    <div>
+                        <button onclick="deleteWorkout(${index})">Удалить</button>
+                    </div>
+                `;
+                workoutsListContainer.appendChild(itemDiv);
+            });
+        }
+
+        // Функция удаления записи
+        window.deleteWorkout = function(index) {
+            workouts.splice(index, 1);
+            saveWorkouts();
+            render();
+        };
+
+        // Обработчик добавления упражнения
+        addBtn.addEventListener("click", () => {
+            const name = nameInput.value.trim();
+            const muscle = muscleSelect.value;
+            const sets = parseInt(setsInput.value);
+            const reps = parseInt(repsInput.value);
+            const weight = parseFloat(weightInput.value);
+
+            if (!name || !sets || sets <= 0 || !reps || reps <= 0 || isNaN(weight) || weight < 0) {
+                alert("Пожалуйста, заполните все поля корректно!");
+                return;
+            }
+
+            const newWorkout = { name, muscle, sets, reps, weight };
+            workouts.push(newWorkout);
+            saveWorkouts();
+            render();
+
+            // Очистка полей ввода
+            nameInput.value = "";
+            setsInput.value = "";
+            repsInput.value = "";
+            weightInput.value = "";
+        });
+
+        // Инициализация при загрузке
+        workouts = loadWorkouts();
+        render();
+    </script>
+</body>
+</html>
