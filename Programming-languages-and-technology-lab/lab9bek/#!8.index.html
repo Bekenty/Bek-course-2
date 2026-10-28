@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лабораторная работа №9 - Вариант 18</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 0 16px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        h1 {
+            font-size: 22px;
+            margin-bottom: 16px;
+            color: #2c3e50;
+        }
+        h2 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: #34495e;
+        }
+        .load-btn {
+            padding: 8px 14px;
+            cursor: pointer;
+            background-color: #d69e2e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .load-btn:hover {
+            background-color: #b7791f;
+        }
+        .load-btn:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+        }
+        .status {
+            margin: 12px 0;
+            font-weight: bold;
+        }
+        .results {
+            list-style-type: none;
+            padding: 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .results li {
+            padding: 10px 12px;
+            margin: 6px 0;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Лабораторная работа №9: Fetch API и AJAX</h1>
+        
+        <section id="task-advanced">
+            <h2>Вариант 18: Параллельная загрузка (Promise.all)</h2>
+            <button class="load-btn" id="load-stats">Загрузить статистику</button>
+            <p class="status" role="status"></p>
+            <ul class="results"></ul>
+        </section>
+    </div>
+
+    <script>
+        const loadBtn = document.querySelector('#load-stats');
+        const statusParagraph = document.querySelector('.status');
+        const resultsList = document.querySelector('.results');
+
+        loadBtn.addEventListener('click', async () => {
+            loadBtn.disabled = true;
+            statusParagraph.textContent = 'Параллельная загрузка данных (/users и /posts)...';
+            statusParagraph.style.color = '#333';
+            resultsList.replaceChildren();
+
+            try {
+                // Параллельные запросы через Promise.all согласно варианту 18[cite: 3]
+                const [usersRes, postsRes] = await Promise.all([
+                    fetch('https://jsonplaceholder.typicode.com/users'),
+                    fetch('https://jsonplaceholder.typicode.com/posts')
+                ]);
+
+                if (!usersRes.ok || !postsRes.ok) {
+                    throw new Error('Не удалось получить данные с сервера');
+                }
+
+                const [users, posts] = await Promise.all([
+                    usersRes.json(),
+                    postsRes.json()
+                ]);
+
+                // Подсчет количества публикаций каждого пользователя
+                for (const user of users) {
+                    const count = posts.filter(post => post.userId === user.id).length;
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span><strong>${user.name}</strong> (@${user.username})</span> <span>Публикаций: ${count}</span>`;
+                    resultsList.append(li);
+                }
+
+                statusParagraph.textContent = `Успешно обработано пользователей: ${users.length}`;
+                statusParagraph.style.color = '#38a169';
+            } catch (error) {
+                statusParagraph.textContent = `Ошибка: ${error.message}`;
+                statusParagraph.style.color = '#e53e3e';
+            } finally {
+                loadBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
