@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Лабораторная работа №10 — Модульный конвертер температур</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; background-color: #f9f9f9; color: #333; }
+        .card { background: #fff; padding: 20px; border-radius: 8px; max-width: 400px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        label { display: block; margin-bottom: 1rem; }
+        input { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+        button { padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Конвертер температур</h2>
+        <label>Градусы (°C): 
+            <input id="celsius" type="number" placeholder="Введите температуру">
+        </label>
+        <button id="convertBtn">Конвертировать</button>
+        <p id="result" aria-live="polite"></p>
+    </div>
+
+    <script>
+        // --- 1. Модуль формул (temperature.js) ---
+        function celsiusToFahrenheit(c) {
+            return (c * 9/5) + 32;
+        }
+
+        function celsiusToKelvin(c) {
+            return c + 273.15;
+        }
+
+        // --- 2. Модуль интерфейса и бизнес-логики (main.js) ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const inputC = document.querySelector("#celsius");
+            const btn = document.querySelector("#convertBtn");
+            const output = document.querySelector("#result");
+
+            btn.addEventListener("click", () => {
+                const val = inputC.value.trim();
+                
+                // Обработка некорректного ввода
+                if (val === "" || !Number.isFinite(Number(val))) {
+                    output.textContent = "Ошибка: введите корректное число для градусов Цельсия.";
+                    output.style.color = "red";
+                    return;
+                }
+
+                const c = Number(val);
+                const f = celsiusToFahrenheit(c);
+                const k = celsiusToKelvin(c);
+
+                output.style.color = "green";
+                output.textContent = `Результат: Фаренгейт = ${f.toFixed(2)} °F, Кельвин = ${k.toFixed(2)} K`;
+            });
+        });
+    </script>
+</body>
+</html>

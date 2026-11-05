@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Лабораторная работа №10 — Корзина покупок</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; display: flex; gap: 2rem; background-color: #f4f6f9; }
+        section { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 320px; }
+        h2 { font-size: 1.2rem; margin-top: 0; color: #333; }
+        button { background: #28a745; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; margin-top: 5px; }
+        button:hover { background: #218838; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 6px; }
+        .total { font-weight: bold; margin-top: 15px; color: #007bff; }
+    </style>
+</head>
+<body>
+
+    <section>
+        <h2>Каталог товаров</h2>
+        <div id="products-list"></div>
+    </section>
+
+    <section>
+        <h2>Корзина</h2>
+        <ul id="cart-list">
+            <li>Корзина пуста</li>
+        </ul>
+        <p id="cart-total" class="total">Итого: 0 тг.</p>
+    </section>
+
+    <script>
+        // --- 1. Модуль данных (products.js) ---
+        const productsData = [
+            { id: 1, name: "Ноутбук", price: 450000 },
+            { id: 2, name: "Мышь", price: 7500 },
+            { id: 3, name: "Клавиатура", price: 20000 }
+        ];
+
+        function getProductById(id) {
+            return productsData.find(p => p.id === Number(id));
+        }
+
+        // --- 2. Модуль логики корзины (cart.js) ---
+        let cart = [];
+
+        function addToCart(product) {
+            cart.push(product);
+        }
+
+        function getCartItems() {
+            return cart;
+        }
+
+        function calculateTotal() {
+            return cart.reduce((sum, item) => sum + item.price, 0);
+        }
+
+        // --- 3. Модуль интерфейса (ui.js) ---
+        function renderProducts(products, onAddCallback) {
+            const container = document.querySelector("#products-list");
+            container.innerHTML = "";
+            products.forEach(p => {
+                const div = document.createElement("div");
+                div.style.marginBottom = "12px";
+                div.innerHTML = `<span>${p.name} — ${p.price} тг.</span><br>`;
+                
+                const btn = document.createElement("button");
+                btn.textContent = "Купить";
+                btn.addEventListener("click", () => onAddCallback(p.id));
+                
+                div.appendChild(btn);
+                container.appendChild(div);
+            });
+        }
+
+        function renderCart(cartItems, total) {
+            const ul = document.querySelector("#cart-list");
+            const totalEl = document.querySelector("#cart-total");
+            ul.innerHTML = "";
+            
+            if (cartItems.length === 0) {
+                ul.innerHTML = "<li>Корзина пуста</li>";
+            } else {
+                cartItems.forEach(item => {
+                    const li = document.createElement("li");
+                    li.textContent = `${item.name} - ${item.price} тг.`;
+                    ul.appendChild(li);
+                });
+            }
+            totalEl.textContent = `Итого: ${total} тг.`;
+        }
+
+        // --- 4. Главный управляющий модуль (main.js) ---
+        function updateUI() {
+            renderCart(getCartItems(), calculateTotal());
+        }
+
+        documeыnt.addEventListener("DOMContentLoaded", () => {
+            renderProducts(productsData, (id) => {
+                const product = getProductById(id);
+                if (product) {
+                    addToCart(product);
+                    updateUI();
+                }
+            });
+            updateUI();
+        });
+    </script>
+</body>
+</html>
