@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Лабораторная №11 - React Props & State</title>
+
+  <!-- 1. Подключаем React и Babel напрямую из интернета (без Node.js) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7f6;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    .app-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .student-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      border-top: 5px solid #3498db;
+    }
+    .info-p {
+      margin: 8px 0;
+    }
+    .details-box {
+      background: #eef9f1;
+      border-left: 4px solid #2ecc71;
+      padding: 10px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .card-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    button.hide-btn {
+      background-color: #e67e22;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Сюда React будет монтировать наше приложение -->
+  <div id="root"></div>
+
+  <!-- 2. Пишем React-код (JSX) -->
+  <script type="text/babel">
+    const { useState } = React;
+
+    // Дочерний компонент StudentCard (Вариант №2)
+    // Принимает данные через PROPS
+    function StudentCard({ name, group, specialty, gpa, projectsCount }) {
+      // Локальный STATE для показа/скрытия подробностей
+      const [showDetails, setShowDetails] = useState(false);
+      // Локальный STATE для счетчика лайков
+      const [likes, setLikes] = useState(0);
+
+      return (
+        <div className="student-card">
+          <h3>{name}</h3>
+          <p className="info-p"><strong>Группа:</strong> {group}</p>
+          <p className="info-p"><strong>Специальность:</strong> {specialty}</p>
+
+          {/* Условный рендеринг на основе state */}
+          {showDetails && (
+            <div className="details-box">
+              <p className="info-p">📚 <strong>GPA:</strong> {gpa}</p>
+              <p className="info-p">💻 <strong>Проектов:</strong> {projectsCount}</p>
+              <p className="info-p">⭐ <strong>Лайки:</strong> {likes}</p>
+            </div>
+          )}
+
+          <div className="card-actions">
+            <button 
+              className={showDetails ? "hide-btn" : ""} 
+              onClick={() => setShowDetails(!showDetails)}
+            >
+              {showDetails ? "Скрыть детали" : "Подробнее"}
+            </button>
+
+            {showDetails && (
+              <button onClick={() => setLikes(prev => prev + 1)}>
+                Лайк 👍
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Родительский компонент App
+    function App() {
+      return (
+        <div className="app-container">
+          <h1>Электронный деканат: ИС 25-22</h1>
+          
+          <div className="cards-grid">
+            {/* Передаем props первому компоненту */}
+            <StudentCard 
+              name="Жарас Бек Жомартулы" 
+              group="ИС 25-22" 
+              specialty="Информационные технологии" 
+              gpa="3.8"
+              projectsCount={5}
+            />
+
+            {/* Передаем props второму компоненту (независимый state) */}
+            <StudentCard 
+              name="Амирхан Серик" 
+              group="ИС 25-22" 
+              specialty="Информационные технологии" 
+              gpa="3.6"
+              projectsCount={4}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    // Рендерим приложение в элемент #root
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
