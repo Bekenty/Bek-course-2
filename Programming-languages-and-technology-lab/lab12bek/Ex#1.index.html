@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ЛР №12 — Базовый уровень (Вариант №1: Личный кабинет студента)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { background: #f3f4f6; color: #1f2937; padding: 30px 15px; }
+    .container { max-width: 520px; margin: 0 auto; }
+    .card { background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+    h1 { font-size: 1.4rem; margin-bottom: 6px; }
+    .subtitle { font-size: 0.9rem; color: #6b7280; margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.95rem; }
+    input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; }
+    input:focus { outline: none; border-color: #2563eb; }
+    .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 6px; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-danger { background: #dc2626; color: #fff; margin-top: 16px; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-outline { background: #f9fafb; border: 1px solid #d1d5db; color: #111827; margin-top: 12px; }
+    .btn-outline:hover { background: #e5e7eb; }
+    .alert { padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 0.95rem; }
+    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+    .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+    .info-box { background: #f8fafc; padding: 14px; border-radius: 6px; border-left: 4px solid #2563eb; margin-top: 14px; font-size: 0.9rem; }
+    .profile-data { margin-top: 12px; line-height: 1.7; }
+    .server-log { background: #111827; color: #10b981; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; margin-top: 14px; white-space: pre-wrap; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Личный кабинет студента</h1>
+      <p class="subtitle">Лабораторная работа №12 | Вариант №1 (Базовый уровень)</p>
+
+      <div id="alertBox" class="alert hidden"></div>
+
+      <!-- Форма входа -->
+      <section id="loginSection">
+        <form id="loginForm" novalidate>
+          <div class="form-group">
+            <label for="loginInput">Логин студента</label>
+            <input type="text" id="loginInput" placeholder="Например: student1">
+          </div>
+          <div class="form-group">
+            <label for="passwordInput">Пароль</label>
+            <input type="password" id="passwordInput" placeholder="Введите пароль">
+          </div>
+          <button type="submit" class="btn btn-primary">Войти в кабинет</button>
+        </form>
+
+        <div class="info-box">
+          <strong>Тестовый аккаунт:</strong><br>
+          Логин: <code>student1</code> | Пароль: <code>stud123</code>
+        </div>
+      </section>
+
+      <!-- Защищенный личный кабинет -->
+      <section id="profileSection" class="hidden">
+        <h3>Добро пожаловать, <span id="studentName"></span>!</h3>
+        <div class="profile-data">
+          <p><strong>Группа:</strong> <span id="studentGroup"></span></p>
+          <p><strong>Специальность:</strong> Информационные технологии</p>
+          <p><strong>Статус сессии:</strong> Активна (проверено сервером)</p>
+        </div>
+
+        <button id="checkProtectedBtn" class="btn btn-outline">Запросить зачетную ведомость (GET /api/grades)</button>
+        <div id="serverResponse" class="server-log">Ожидание запроса к защищенному ресурсу...</div>
+
+        <button id="logoutBtn" class="btn btn-danger">Выйти из аккаунта</button>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // Имитация серверной логики (проверка логина/пароля и сессии)
+    const MockServer = (() => {
+      const STUDENT_ACCOUNT = {
+        login: 'student1',
+        passwordHash: 'hash_stud123',
+        name: 'Жарас Бек Жомартулы',
+        group: 'ИС 25-22',
+        grades: [
+          'Базы данных (MySQL): 95 баллов',
+          'Веб-программирование (JS): 92 балла',
+          'Лабораторная работа №12: Выполнена'
+        ]
+      };
+
+      const ACTIVE_SESSIONS = new Set();
+
+      function login(login, password) {
+        if (!login.trim() || !password.trim()) {
+          return { status: 400, message: 'HTTP 400 Bad Request: Заполните все обязательные поля.' };
+        }
+        if (login.trim() !== STUDENT_ACCOUNT.login || `hash_${password}` !== STUDENT_ACCOUNT.passwordHash) {
+          return { status: 401, message: 'HTTP 401 Unauthorized: Неверный логин или пароль.' };
+        }
+        const sessionId = 'sess_' + Math.random().toString(36).substring(2) + Date.now();
+        ACTIVE_SESSIONS.add(sessionId);
+        return {
+          status: 200,
+          message: 'HTTP 200 OK: Вход выполнен успешно.',
+          sessionId,
+          user: { name: STUDENT_ACCOUNT.name, group: STUDENT_ACCOUNT.group }
+        };
+      }
+
+      function getProfile(sessionId) {
+        if (!sessionId || !ACTIVE_SESSIONS.has(sessionId)) {
+          return { status: 401, message: 'HTTP 401 Unauthorized: Доступ запрещен. Требуется вход.' };
+        }
+        return {
+          status: 200,
+          user: { name: STUDENT_ACCOUNT.name, group: STUDENT_ACCOUNT.group }
+        };
+      }
+
+      function getGrades(sessionId) {
+        if (!sessionId || !ACTIVE_SESSIONS.has(sessionId)) {
+          return { status: 401, message: 'HTTP 401 Unauthorized: Сессия недействительна.' };
+        }
+        return { status: 200, grades: STUDENT_ACCOUNT.grades };
+      }
+
+      function logout(sessionId) {
+        ACTIVE_SESSIONS.delete(sessionId);
+        return { status: 200, message: 'HTTP 200 OK: Сессия завершена, выход выполнен.' };
+      }
+
+      return { login, getProfile, getGrades, logout };
+    })();
+
+    // Клиентская логика
+    const loginSection = document.getElementById('loginSection');
+    const profileSection = document.getElementById('profileSection');
+    const loginForm = document.getElementById('loginForm');
+    const alertBox = document.getElementById('alertBox');
+    const serverResponse = document.getElementById('serverResponse');
+    const SESSION_KEY = 'basic_student_session';
+
+    function showAlert(text, isError = false) {
+      alertBox.textContent = text;
+      alertBox.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+      alertBox.classList.remove('hidden');
+    }
+
+    function renderProfile(user) {
+      document.getElementById('studentName').textContent = user.name;
+      document.getElementById('studentGroup').textContent = user.group;
+      loginSection.classList.add('hidden');
+      profileSection.classList.remove('hidden');
+    }
+
+    // Проверка сессии при загрузке страницы
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedSession = sessionStorage.getItem(SESSION_KEY);
+      if (savedSession) {
+        const res = MockServer.getProfile(savedSession);
+        if (res.status === 200) {
+          renderProfile(res.user);
+        } else {
+          sessionStorage.removeItem(SESSION_KEY);
+        }
+      }
+    });
+
+    // Вход
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const loginVal = document.getElementById('loginInput').value;
+      const passVal = document.getElementById('passwordInput').value;
+
+      const res = MockServer.login(loginVal, passVal);
+      if (res.status === 200) {
+        sessionStorage.setItem(SESSION_KEY, res.sessionId);
+        showAlert(res.message, false);
+        renderProfile(res.user);
+      } else {
+        showAlert(res.message, true);
+      }
+    });
+
+    // Запрос защищенных данных
+    document.getElementById('checkProtectedBtn').addEventListener('click', () => {
+      const sessionId = sessionStorage.getItem(SESSION_KEY);
+      const res = MockServer.getGrades(sessionId);
+      if (res.status === 200) {
+        serverResponse.style.color = '#10b981';
+        serverResponse.textContent = 'Статус: HTTP 200 OK\n' + res.grades.join('\n');
+      } else {
+        serverResponse.style.color = '#f87171';
+        serverResponse.textContent = res.message;
+      }
+    });
+
+    // Выход
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      const sessionId = sessionStorage.getItem(SESSION_KEY);
+      const res = MockServer.logout(sessionId);
+      sessionStorage.removeItem(SESSION_KEY);
+      loginForm.reset();
+      profileSection.classList.add('hidden');
+      loginSection.classList.remove('hidden');
+      serverResponse.textContent = 'Ожидание запроса к защищенному ресурсу...';
+      showAlert(res.message, false);
+    });
+  </script>
+</body>
+</html>

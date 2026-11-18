@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ЛР №12 — Повышенный уровень (Вариант №20: Учебный портал)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { background: #f1f5f9; color: #0f172a; padding: 24px 16px; line-height: 1.5; }
+    .container { max-width: 860px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .header h1 { font-size: 1.5rem; color: #0f172a; }
+    .subtitle { font-size: 0.9rem; color: #475569; }
+    .timer-badge { background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 8px 14px; border-radius: 6px; font-weight: 700; font-size: 0.9rem; }
+    .card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.95rem; }
+    input { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; }
+    input:focus { outline: none; border-color: #2563eb; }
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; font-size: 0.92rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: #475569; color: #fff; }
+    .btn-secondary:hover { background: #334155; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-warning { background: #d97706; color: #fff; }
+    .btn-warning:hover { background: #b45309; }
+    .btn-outline { background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; }
+    .btn-outline:hover { background: #e2e8f0; }
+    .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-weight: 500; }
+    .alert-success { background: #dcfce7; border: 1px solid #22c55e; color: #166534; }
+    .alert-error { background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; }
+    .accounts-box { margin-top: 18px; padding: 14px; background: #f8fafc; border-left: 4px solid #2563eb; font-size: 0.9rem; }
+    .accounts-box ul { margin-left: 20px; margin-top: 6px; }
+    .top-bar { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 16px; }
+    .role-pill { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; background: #dbeafe; color: #1e40af; }
+    .jwt-preview { font-size: 0.82rem; color: #64748b; margin-top: 6px; word-break: break-all; }
+    .btn-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
+    .console-box { background: #0f172a; color: #38bdf8; padding: 14px; border-radius: 6px; font-family: 'Consolas', monospace; font-size: 0.88rem; white-space: pre-wrap; margin-top: 10px; }
+    .audit-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; max-height: 140px; overflow-y: auto; font-size: 0.85rem; margin-top: 14px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>Учебный портал — Защищенная система (JWT + Сессии)</h1>
+        <p class="subtitle">Лабораторная работа №12 | Вариант №20 (Повышенный уровень)</p>
+      </div>
+      <div id="timerBadge" class="timer-badge hidden">
+        Сессия истекает через: <span id="timerText">01:00</span>
+      </div>
+    </div>
+
+    <div id="alertBox" class="alert hidden"></div>
+
+    <!-- ЭКРАН 1: Вход -->
+    <section id="loginView" class="card">
+      <h2>Авторизация в учебном портале</h2>
+      <form id="loginForm" novalidate>
+        <div class="form-group">
+          <label for="loginInput">Логин пользователя</label>
+          <input type="text" id="loginInput" placeholder="Введите логин">
+        </div>
+        <div class="form-group">
+          <label for="passwordInput">Пароль</label>
+          <input type="password" id="passwordInput" placeholder="Введите пароль">
+        </div>
+        <button type="submit" class="btn btn-primary">Войти</button>
+      </form>
+
+      <div class="accounts-box">
+        <strong>Тестовые учетные записи для проверки ролей:</strong>
+        <ul>
+          <li><strong>Студент:</strong> <code>student1</code> / <code>stud123</code> (роль: <code>student</code>)</li>
+          <li><strong>Преподаватель:</strong> <code>teacher1</code> / <code>teach123</code> (роль: <code>teacher</code>)</li>
+          <li><strong>Администратор:</strong> <code>admin1</code> / <code>admin123</code> (роль: <code>admin</code>)</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ЭКРАН 2: Защищенный портал -->
+    <section id="portalView" class="card hidden">
+      <div class="top-bar">
+        <div>
+          <h2 id="userNameTitle">Пользователь</h2>
+          <p>Логин: <strong id="userLoginText"></strong> | Роль: <span id="userRoleText" class="role-pill"></span> | Версия токена: <strong id="tokenVerText"></strong></p>
+          <p class="jwt-preview">JWT (header.payload.signature): <code id="jwtDisplay"></code></p>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button id="logoutBtn" class="btn btn-secondary">Выйти (текущее устройство)</button>
+          <button id="logoutAllBtn" class="btn btn-danger">Выйти со всех устройств</button>
+        </div>
+      </div>
+
+      <h3>Защищенные маршруты и проверка прав на сервере</h3>
+      <div class="btn-grid">
+        <button id="reqStudentBtn" class="btn btn-outline">GET /api/student/materials (Student/Teacher/Admin)</button>
+        <button id="reqTeacherBtn" class="btn btn-outline">GET /api/teacher/journal (Только Teacher/Admin)</button>
+        <button id="reqAdminBtn" class="btn btn-outline">GET /api/admin/panel (Только Admin)</button>
+        <button id="reqForeignBtn" class="btn btn-outline">GET /api/users/999/private (Чужой ресурс)</button>
+        <button id="expireNowBtn" class="btn btn-warning">Имитировать истечение сессии</button>
+      </div>
+
+      <div id="apiOutput" class="console-box">Сервер готов к проверке запросов...</div>
+
+      <h3 style="margin-top: 18px; font-size: 1rem;">Журнал событий безопасности (Аудит)</h3>
+      <div id="auditLog" class="audit-box"></div>
+    </section>
+  </div>
+
+  <script>
+    // =========================================================
+    // СЕРВЕРНЫЙ МОДУЛЬ (Имитация проверки JWT, ролей и сессий)
+    // =========================================================
+    const AuthBackend = (() => {
+      const USERS = [
+        { id: 101, login: 'student1', passHash: 'hash_stud123', name: 'Жарас Бек Жомартулы (ИС 25-22)', role: 'student', tokenVersion: 1 },
+        { id: 202, login: 'teacher1', passHash: 'hash_teach123', name: 'Ахметов С.К. (Преподаватель)', role: 'teacher', tokenVersion: 1 },
+        { id: 303, login: 'admin1', passHash: 'hash_admin123', name: 'Системный администратор', role: 'admin', tokenVersion: 1 }
+      ];
+
+      // Серверное хранилище активных сессий
+      const SESSIONS = new Map();
+      const SESSION_DURATION_MS = 60 * 1000; // 60 секунд для наглядной демонстрации тайм-аута
+      const SERVER_SECRET = 'ATU_SECRET_KEY_2026';
+
+      function createJWT(user, expiresAt) {
+        const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+        const payload = btoa(unescape(encodeURIComponent(JSON.stringify({
+          sub: user.id,
+          login: user.login,
+          role: user.role,
+          ver: user.tokenVersion,
+          exp: expiresAt
+        }))));
+        const signature = btoa(`${header}.${payload}.${SERVER_SECRET}`);
+        return `${header}.${payload}.${signature}`;
+      }
+
+      function verifyJWTAndSession(token) {
+        if (!token) {
+          return { ok: false, status: 401, message: 'HTTP 401 Unauthorized: Токен отсутствует.' };
+        }
+
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+          return { ok: false, status: 401, message: 'HTTP 401 Unauthorized: Некорректный формат JWT.' };
+        }
+
+        // Проверка подписи токена
+        const expectedSig = btoa(`${parts[0]}.${parts[1]}.${SERVER_SECRET}`);
+        if (parts[2] !== expectedSig) {
+          return { ok: false, status: 401, message: 'HTTP 401 Unauthorized: Подпись JWT недействительна!' };
+        }
+
+        // Проверка наличия активной серверной сессии
+        const session = SESSIONS.get(token);
+        if (!session) {
+          return { ok: false, status: 401, message: 'HTTP 401 Unauthorized: Сессия закрыта или не найдена на сервере.' };
+        }
+
+        const user = USERS.find(u => u.id === session.userId);
+        // Проверка выхода со всех устройств (сравнение версии токена)
+        if (!user || session.tokenVersion !== user.tokenVersion) {
+          SESSIONS.delete(token);
+          return { ok: false, status: 401, message: 'HTTP 401 Unauthorized: Сессия аннулирована (выполнен выход со всех устройств).' };
+        }
+
+        // Проверка срока действия токена/сессии
+        if (Date.now() > session.expiresAt) {
+          SESSIONS.delete(token);
+          return { ok: false, status: 401, message: 'HTTP 401 Unauthorized: Срок действия сессии истек.' };
+        }
+
+        return { ok: true, session, user };
+      }
+
+      // POST /login
+      function login(login, password) {
+        if (!login.trim() || !password.trim()) {
+          return { status: 400, message: 'HTTP 400 Bad Request: Логин и пароль обязательны.' };
+        }
+        const user = USERS.find(u => u.login === login.trim());
+        if (!user || user.passHash !== `hash_${password}`) {
+          return { status: 401, message: 'HTTP 401 Unauthorized: Неверный логин или пароль.' };
+        }
+
+        const expiresAt = Date.now() + SESSION_DURATION_MS;
+        const token = createJWT(user, expiresAt);
+
+        SESSIONS.set(token, {
+          userId: user.id,
+          role: user.role,
+          tokenVersion: user.tokenVersion,
+          expiresAt
+        });
+
+        return {
+          status: 200,
+          message: 'HTTP 200 OK: Аутентификация пройдена.',
+          token,
+          expiresAt,
+          user: { id: user.id, login: user.login, name: user.name, role: user.role, tokenVersion: user.tokenVersion }
+        };
+      }
+
+      // GET /profile
+      function getProfile(token) {
+        const auth = verifyJWTAndSession(token);
+        if (!auth.ok) return { status: auth.status, message: auth.message };
+
+        return {
+          status: 200,
+          expiresAt: auth.session.expiresAt,
+          user: {
+            id: auth.user.id,
+            login: auth.user.login,
+            name: auth.user.name,
+            role: auth.user.role,
+            tokenVersion: auth.user.tokenVersion
+          }
+        };
+      }
+
+      // Защищенные маршруты с проверкой ролей
+      function accessResource(token, endpoint) {
+        const auth = verifyJWTAndSession(token);
+        if (!auth.ok) return { status: auth.status, message: auth.message };
+
+        const role = auth.user.role;
+
+        if (endpoint === 'student') {
+          return { status: 200, data: `Учебные материалы курса доступны для роли "${role}".` };
+        }
+        if (endpoint === 'teacher') {
+          if (role !== 'teacher' && role !== 'admin') {
+            return { status: 403, message: `HTTP 403 Forbidden: Роль "${role}" не имеет доступа к журналу преподавателя.` };
+          }
+          return { status: 200, data: 'Журнал оценок группы ИС 25-22 открыт.' };
+        }
+        if (endpoint === 'admin') {
+          if (role !== 'admin') {
+            return { status: 403, message: `HTTP 403 Forbidden: Требуются права администратора (ваша роль: "${role}").` };
+          }
+          return { status: 200, data: 'Панель администратора: управление пользователями и ключами.' };
+        }
+        if (endpoint === 'foreign') {
+          return { status: 403, message: 'HTTP 403 Forbidden: Горизонтальный доступ к чужому профилю (ID: 999) заблокирован.' };
+        }
+      }
+
+      // POST /logout
+      function logout(token) {
+        SESSIONS.delete(token);
+        return { status: 200, message: 'HTTP 200 OK: Текущая сессия завершена.' };
+      }
+
+      // POST /logout-all (Вариант №20: выход со всех устройств)
+      function logoutAll(token) {
+        const auth = verifyJWTAndSession(token);
+        if (!auth.ok) return { status: auth.status, message: auth.message };
+
+        auth.user.tokenVersion += 1; // Инвалидация всех выпущенных ранее JWT пользователя
+        SESSIONS.delete(token);
+
+        return {
+          status: 200,
+          message: `HTTP 200 OK: Выполнен выход со всех устройств. Версия токенов обновлена до v${auth.user.tokenVersion}.`
+        };
+      }
+
+      function forceExpire(token) {
+        if (SESSIONS.has(token)) {
+          SESSIONS.get(token).expiresAt = Date.now() - 500;
+        }
+      }
+
+      return { login, getProfile, accessResource, logout, logoutAll, forceExpire };
+    })();
+
+    // =========================================================
+    // КЛИЕНТСКИЙ ИНТЕРФЕЙС
+    // =========================================================
+    const loginView = document.getElementById('loginView');
+    const portalView = document.getElementById('portalView');
+    const alertBox = document.getElementById('alertBox');
+    const timerBadge = document.getElementById('timerBadge');
+    const timerText = document.getElementById('timerText');
+    const apiOutput = document.getElementById('apiOutput');
+    const auditLog = document.getElementById('auditLog');
+
+    const STORAGE_KEY = 'portal_jwt_token';
+    let countdownInterval = null;
+
+    function logEvent(text) {
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.textContent = `[${time}] ${text}`;
+      auditLog.prepend(entry);
+    }
+
+    function showAlert(msg, isError = false) {
+      alertBox.textContent = msg;
+      alertBox.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+      alertBox.classList.remove('hidden');
+    }
+
+    function startCountdown(expiresAt) {
+      clearInterval(countdownInterval);
+      timerBadge.classList.remove('hidden');
+
+      function tick() {
+        const secLeft = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+        const mm = String(Math.floor(secLeft / 60)).padStart(2, '0');
+        const ss = String(secLeft % 60).padStart(2, '0');
+        timerText.textContent = `${mm}:${ss}`;
+
+        if (secLeft <= 0) {
+          clearInterval(countdownInterval);
+          handleExpiredUI('HTTP 401: Время сессии истекло. Выполните повторный вход.');
+        }
+      }
+      tick();
+      countdownInterval = setInterval(tick, 1000);
+    }
+
+    function handleExpiredUI(reason) {
+      sessionStorage.removeItem(STORAGE_KEY);
+      clearInterval(countdownInterval);
+      timerBadge.classList.add('hidden');
+      portalView.classList.add('hidden');
+      loginView.classList.remove('hidden');
+      showAlert(reason, true);
+    }
+
+    function openPortal(user, token, expiresAt) {
+      document.getElementById('userNameTitle').textContent = user.name;
+      document.getElementById('userLoginText').textContent = user.login;
+      document.getElementById('userRoleText').textContent = user.role.toUpperCase();
+      document.getElementById('tokenVerText').textContent = `v${user.tokenVersion}`;
+      document.getElementById('jwtDisplay').textContent = token;
+
+      loginView.classList.add('hidden');
+      portalView.classList.remove('hidden');
+      startCountdown(expiresAt);
+    }
+
+    // Восстановление сессии при обновлении страницы (F5)
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedToken = sessionStorage.getItem(STORAGE_KEY);
+      if (!savedToken) return;
+
+      const res = AuthBackend.getProfile(savedToken);
+      if (res.status === 200) {
+        openPortal(res.user, savedToken, res.expiresAt);
+        logEvent(`Сессия восстановлена после обновления страницы (${res.user.login}).`);
+      } else {
+        handleExpiredUI(res.message);
+      }
+    });
+
+    // Обработка входа
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const loginVal = document.getElementById('loginInput').value;
+      const passVal = document.getElementById('passwordInput').value;
+
+      const res = AuthBackend.login(loginVal, passVal);
+      if (res.status === 200) {
+        sessionStorage.setItem(STORAGE_KEY, res.token);
+        showAlert(res.message, false);
+        openPortal(res.user, res.token, res.expiresAt);
+        logEvent(`Успешный вход: ${res.user.login} (роль: ${res.user.role}).`);
+      } else {
+        showAlert(res.message, true);
+      }
+    });
+
+    // Запросы к защищенным маршрутам
+    function sendProtectedRequest(endpoint) {
+      const token = sessionStorage.getItem(STORAGE_KEY);
+      const res = AuthBackend.accessResource(token, endpoint);
+
+      if (res.status === 200) {
+        apiOutput.style.color = '#4ade80';
+        apiOutput.textContent = `Статус: HTTP 200 OK\nОтвет: ${res.data}`;
+        logEvent(`Доступ разрешен к /api/${endpoint} (HTTP 200).`);
+      } else {
+        apiOutput.style.color = '#f87171';
+        apiOutput.textContent = `Ошибка доступа: ${res.message}`;
+        logEvent(`Отказ в доступе к /api/${endpoint}: ${res.message}`);
+        if (res.status === 401) {
+          setTimeout(() => handleExpiredUI(res.message), 1200);
+        }
+      }
+    }
+
+    document.getElementById('reqStudentBtn').addEventListener('click', () => sendProtectedRequest('student'));
+    document.getElementById('reqTeacherBtn').addEventListener('click', () => sendProtectedRequest('teacher'));
+    document.getElementById('reqAdminBtn').addEventListener('click', () => sendProtectedRequest('admin'));
+    document.getElementById('reqForeignBtn').addEventListener('click', () => sendProtectedRequest('foreign'));
+
+    // Принудительное истечение сессии
+    document.getElementById('expireNowBtn').addEventListener('click', () => {
+      const token = sessionStorage.getItem(STORAGE_KEY);
+      AuthBackend.forceExpire(token);
+      apiOutput.style.color = '#fbbf24';
+      apiOutput.textContent = 'Срок действия сессии на сервере истек. Нажмите любую кнопку маршрута для проверки HTTP 401.';
+      logEvent('Имитация истечения срока действия сессии.');
+    });
+
+    // Обычный выход
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      const token = sessionStorage.getItem(STORAGE_KEY);
+      const res = AuthBackend.logout(token);
+      handleExpiredUI(res.message);
+      alertBox.className = 'alert alert-success';
+    });
+
+    // Выход со всех устройств (Вариант №20)
+    document.getElementById('logoutAllBtn').addEventListener('click', () => {
+      const token = sessionStorage.getItem(STORAGE_KEY);
+      const res = AuthBackend.logoutAll(token);
+      handleExpiredUI(res.message);
+      alertBox.className = 'alert alert-success';
+    });
+  </script>
+</body>
+</html>
