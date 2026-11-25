@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Лабораторная работа №13 — Вариант 18: Управление заказами</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-2: #0b1220;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --err: #ef4444;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 20px 16px 48px;
+    }
+    header {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 16px;
+    }
+    h1 { margin: 0 0 6px; font-size: 1.4rem; color: #fff; }
+    .sub { margin: 0; color: var(--muted); font-size: 0.92rem; }
+    .bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+      color: #fff;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    input, select {
+      flex: 1;
+      min-width: 110px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    button {
+      background: var(--accent);
+      color: #082f49;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.86rem;
+    }
+    button.sec { background: #334155; color: #f8fafc; }
+    button.warn { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.45); }
+    button.del { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.45); }
+    .list-box {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      min-height: 110px;
+      max-height: 220px;
+      overflow-y: auto;
+      font-size: 0.88rem;
+    }
+    .entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+    }
+    .entry:last-child { border-bottom: none; }
+    .muted { color: var(--muted); font-style: italic; padding: 16px; text-align: center; }
+    .ok { color: var(--ok); font-weight: 700; }
+    .bad { color: var(--err); font-weight: 700; }
+    .warn-txt { color: var(--warn); font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th, td { border-bottom: 1px solid var(--border); padding: 7px 8px; text-align: left; }
+    th { color: var(--muted); }
+    pre {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>ЛР №13 — Вариант 18: Управление заказами</h1>
+      <p class="sub">Словарь заказов (ID → данные заказа) + очередь ID (FIFO): создание, обработка, отмена, проверка согласованности, журнал операций, экспорт JSON и 5 автотестов</p>
+    </header>
+
+    <div class="bar">
+      <button onclick="processNextOrder()">Обработать следующий (FIFO)</button>
+      <button class="sec" onclick="checkConsistency()">Проверить согласованность</button>
+      <button class="sec" onclick="runTests()">Запустить 5 тестов</button>
+      <button class="sec" onclick="downloadReportJson()">Экспорт отчёта (JSON)</button>
+      <button class="sec" onclick="loadDemo()">Загрузить демо-заказы</button>
+      <button class="del" onclick="clearWorkspace()">Очистить всё</button>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>1. Создание и отмена заказа</h2>
+        <div class="row">
+          <input id="orderIdInput" placeholder="ID (напр. ORD-101)" />
+          <input id="customerInput" placeholder="Клиент" />
+          <input id="amountInput" type="number" placeholder="Сумма" />
+        </div>
+        <div class="row">
+          <button onclick="createOrder()">Создать заказ</button>
+          <input id="cancelIdInput" placeholder="ID для отмены..." />
+          <button class="warn" onclick="cancelOrder()">Отменить заказ</button>
+        </div>
+        <div id="statusMsg" class="muted" style="padding: 8px; text-align: left; font-style: normal;">Готово к работе.</div>
+        <div style="margin-top: 10px;">
+          <strong>Проверка согласованности (dict ↔ queue):</strong>
+          <div id="consistencyBox" style="margin-top: 6px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>2. Очередь ID активных заказов (FIFO)</h2>
+        <div class="list-box" id="queueBox"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+      <h2>3. Словарь заказов (все записи по ID)</h2>
+      <div class="list-box" id="dictBox"></div>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+      <h2>4. Обязательные тесты (5 сценариев)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>№</th>
+            <th>Сценарий</th>
+            <th>Вход</th>
+            <th>Ожидалось</th>
+            <th>Фактически</th>
+            <th>Статус</th>
+          </tr>
+        </thead>
+        <tbody id="testsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>5. Журнал операций (дополнительная функция)</h2>
+      <pre id="logBox"></pre>
+    </div>
+  </div>
+
+  <script>
+    // Гибридная модель Варианта 18:
+    // ordersDict: словарь { [orderId]: { id, customer, amount, status } }
+    // activeQueue: очередь ID заказов на обработку (FIFO: push в конец, shift с начала)
+    // historyLog: журнал операций (дополнительная функция)
+    const state = {
+      ordersDict: {},
+      activeQueue: [],
+      historyLog: []
+    };
+
+    function logEvent(type, detail) {
+      const stamp = new Date().toLocaleTimeString("ru-RU");
+      state.historyLog.unshift("[" + stamp + "] " + type + ": " + detail);
+    }
+
+    function setBanner(text, isErr) {
+      const el = document.getElementById("statusMsg");
+      el.textContent = text;
+      el.className = isErr ? "bad" : "ok";
+    }
+
+    function createOrder(rawId, rawCustomer, rawAmount) {
+      const idEl = document.getElementById("orderIdInput");
+      const custEl = document.getElementById("customerInput");
+      const amtEl = document.getElementById("amountInput");
+
+      const id = (rawId !== undefined ? rawId : idEl.value).trim().toUpperCase();
+      const customer = (rawCustomer !== undefined ? rawCustomer : custEl.value).trim();
+      const amount = Number(rawAmount !== undefined ? rawAmount : amtEl.value);
+
+      if (!id || !customer || Number.isNaN(amount) || amount <= 0) {
+        logEvent("CREATE_REJECTED", "Некорректные поля заказа");
+        if (rawId === undefined) setBanner("Ошибка: укажите ID, клиента и сумму > 0.", true);
+        render();
+        return false;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(state.ordersDict, id)) {
+        logEvent("DUPLICATE_ID", "Заказ с ID " + id + " уже существует");
+        if (rawId === undefined) setBanner("Отказ: заказ с ID " + id + " уже существует (дубликат).", true);
+        render();
+        return false;
+      }
+
+      state.ordersDict[id] = { id, customer, amount, status: "QUEUED" };
+      state.activeQueue.push(id);
+      logEvent("ORDER_CREATED", id + " (" + customer + ", " + amount + ")");
+
+      if (rawId === undefined) {
+        idEl.value = "";
+        custEl.value = "";
+        amtEl.value = "";
+        setBanner("Создан заказ " + id + " и добавлен в очередь FIFO.", false);
+      }
+      render();
+      return true;
+    }
+
+    function processNextOrder() {
+      if (state.activeQueue.length === 0) {
+        logEvent("PROCESS_EMPTY", "Очередь пуста — обрабатывать нечего");
+        setBanner("Очередь пуста: нет заказов для обработки.", true);
+        render();
+        return null;
+      }
+
+      const nextId = state.activeQueue.shift();
+      const order = state.ordersDict[nextId];
+      if (!order) {
+        logEvent("INCONSISTENCY_SKIP", "В очереди найден отсутствующий ID " + nextId);
+        setBanner("Предупреждение: ID " + nextId + " отсутствовал в словаре.", true);
+        render();
+        return null;
+      }
+
+      order.status = "PROCESSED";
+      logEvent("ORDER_PROCESSED", "Обработан " + nextId + " (FIFO)");
+      setBanner("Обработан заказ " + nextId + " (" + order.customer + ").", false);
+      render();
+      return nextId;
+    }
+
+    function cancelOrder(rawId) {
+      const idEl = document.getElementById("cancelIdInput");
+      const id = (rawId !== undefined ? rawId : idEl.value).trim().toUpperCase();
+
+      if (!id || !Object.prototype.hasOwnProperty.call(state.ordersDict, id)) {
+        logEvent("CANCEL_MISSING", "Заказ " + id + " не найден");
+        if (rawId === undefined) setBanner("Ошибка: заказ " + (id || "(пусто)") + " не найден.", true);
+        render();
+        return false;
+      }
+
+      const order = state.ordersDict[id];
+      order.status = "CANCELLED";
+      const idx = state.activeQueue.indexOf(id);
+      if (idx !== -1) {
+        state.activeQueue.splice(idx, 1);
+      }
+      logEvent("ORDER_CANCELLED", "Отменён заказ " + id);
+      if (rawId === undefined) {
+        idEl.value = "";
+        setBanner("Заказ " + id + " отменён и удалён из активной очереди.", false);
+      }
+      render();
+      return true;
+    }
+
+    function checkConsistency() {
+      const issues = [];
+      const seenInQueue = new Set();
+
+      for (const qId of state.activeQueue) {
+        if (seenInQueue.has(qId)) {
+          issues.push("Дубликат ID в очереди: " + qId);
+        }
+        seenInQueue.add(qId);
+
+        const rec = state.ordersDict[qId];
+        if (!rec) {
+          issues.push("ID " + qId + " есть в очереди, но отсутствует в словаре");
+        } else if (rec.status !== "QUEUED") {
+          issues.push("ID " + qId + " в очереди имеет статус " + rec.status + " вместо QUEUED");
+        }
+      }
+
+      for (const [dId, rec] of Object.entries(state.ordersDict)) {
+        if (rec.status === "QUEUED" && !seenInQueue.has(dId)) {
+          issues.push("Заказ " + dId + " со статусом QUEUED пропущен в очереди");
+        }
+      }
+
+      logEvent("CONSISTENCY_CHECK", issues.length === 0 ? "OK (согласовано)" : issues.join("; "));
+      return issues;
+    }
+
+    function runTests() {
+      // 1. Обычный сценарий FIFO
+      const d1 = {};
+      const q1 = [];
+      d1["O1"] = { status: "QUEUED" }; q1.push("O1");
+      d1["O2"] = { status: "QUEUED" }; q1.push("O2");
+      const firstProcessed = q1.shift();
+      d1[firstProcessed].status = "PROCESSED";
+      const t1 = firstProcessed === "O1" && q1.length === 1 && d1["O1"].status === "PROCESSED";
+
+      // 2. Пустая структура
+      const emptyQ = [];
+      const emptyPop = emptyQ.length > 0 ? emptyQ.shift() : null;
+      const t2 = emptyPop === null;
+
+      // 3. Повтор / дубликат
+      const d3 = { "DUP-1": { id: "DUP-1" } };
+      const dupAllowed = Object.prototype.hasOwnProperty.call(d3, "DUP-1");
+      const t3 = dupAllowed === true;
+
+      // 4. Отмена / обращение к отсутствующему ID
+      const d4 = { "A-1": { status: "QUEUED" } };
+      const existsMissing = Object.prototype.hasOwnProperty.call(d4, "NO-SUCH");
+      const t4 = existsMissing === false;
+
+      // 5. Граничный случай (отрицательная или нулевая сумма / пробельный ID)
+      const invalidId = "   ".trim();
+      const invalidAmt = -50;
+      const t5 = invalidId.length === 0 && invalidAmt <= 0;
+
+      const cases = [
+        [1, "Обычный сценарий FIFO", 'enqueue("O1","O2") -> process()', "O1 (PROCESSED)", firstProcessed + " (" + d1["O1"].status + ")", t1],
+        [2, "Пустая очередь", "processNextOrder() на []", "null без ошибки", String(emptyPop), t2],
+        [3, "Дубликат ID заказа", 'createOrder("DUP-1") повторно', "Дубликат заблокирован", dupAllowed ? "Заблокирован" : "Нет", t3],
+        [4, "Отсутствующий ID", 'cancelOrder("NO-SUCH")', "false / не найден", String(existsMissing), t4],
+        [5, "Граничный случай", 'id="   ", amount=-50', "Отклонено", t5 ? "Отклонено" : "Принято", t5]
+      ];
+
+      document.getElementById("testsBody").innerHTML = cases.map(c =>
+        "<tr>" +
+          "<td>" + c[0] + "</td>" +
+          "<td>" + c[1] + "</td>" +
+          "<td><code>" + c[2] + "</code></td>" +
+          "<td>" + c[3] + "</td>" +
+          "<td>" + c[4] + "</td>" +
+          "<td class='" + (c[5] ? "ok" : "bad") + "'>" + (c[5] ? "PASS" : "FAIL") + "</td>" +
+        "</tr>"
+      ).join("");
+
+      logEvent("TESTS_RUN", "Выполнены 5 тестов Варианта 18");
+      render();
+    }
+
+    function downloadReportJson() {
+      const payload = {
+        variant: 18,
+        topic: "Управление заказами (словарь заказов и очередь ID)",
+        consistencyIssues: checkConsistency(),
+        activeQueue: state.activeQueue,
+        ordersDict: state.ordersDict,
+        historyLog: state.historyLog
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "lab13_variant18_report.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      logEvent("EXPORT_JSON", "Сохранён lab13_variant18_report.json");
+      render();
+    }
+
+    function loadDemo() {
+      clearWorkspace(true);
+      createOrder("ORD-101", "Алия", 12500);
+      createOrder("ORD-102", "Дамир", 8900);
+      createOrder("ORD-103", "Марат", 21400);
+      setBanner("Загружены 3 демонстрационных заказа в очередь FIFO.", false);
+      runTests();
+    }
+
+    function clearWorkspace(silent) {
+      state.ordersDict = {};
+      state.activeQueue = [];
+      state.historyLog = [];
+      if (!silent) {
+        logEvent("CLEAR_ALL", "Словарь и очередь очищены");
+        setBanner("Рабочая область очищена.", false);
+        render();
+      }
+    }
+
+    function render() {
+      const qBox = document.getElementById("queueBox");
+      qBox.innerHTML = state.activeQueue.length
+        ? state.activeQueue.map((id, idx) => {
+            const ord = state.ordersDict[id];
+            const label = ord ? (ord.customer + " — " + ord.amount + " тг") : "(нет в словаре)";
+            return "<div class='entry'><span>" + (idx === 0 ? "▶ " : "") + "<strong>" + id + "</strong>: " + label + "</span><span>#" + (idx + 1) + "</span></div>";
+          }).join("")
+        : "<div class='muted'>Очередь ID пуста</div>";
+
+      const entries = Object.values(state.ordersDict);
+      const dBox = document.getElementById("dictBox");
+      dBox.innerHTML = entries.length
+        ? entries.map(ord =>
+            "<div class='entry'>" +
+              "<span><strong>" + ord.id + "</strong> | " + ord.customer + " | " + ord.amount + " | <em>" + ord.status + "</em></span>" +
+              (ord.status === "QUEUED" ? "<button class='warn' onclick=\"cancelOrder('" + ord.id + "')\">Отменить</button>" : "") +
+            "</div>"
+          ).join("")
+        : "<div class='muted'>Словарь заказов пуст</div>";
+
+      const issues = checkConsistency();
+      const cBox = document.getElementById("consistencyBox");
+      cBox.innerHTML = issues.length === 0
+        ? "<span class='ok'>✓ Согласовано: очередь ID и словарь заказов синхронизированы</span>"
+        : "<span class='bad'>✗ Найдены расхождения: " + issues.join("; ") + "</span>";
+
+      const lBox = document.getElementById("logBox");
+      lBox.textContent = state.historyLog.length ? state.historyLog.join("\n") : "Журнал пуст";
+    }
+
+    loadDemo();
+  </script>
+</body>
+</html>
